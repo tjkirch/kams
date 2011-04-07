@@ -6,12 +6,13 @@
 # and talking to Bob:
 #   @objectives = {:kill => [Bat, Rat], :location => room3, :talk => Bob}
 class Quest
-  attr_reader :id, :name, :description, :objectives
+  attr_reader :id, :name, :description, :objectives, :rewards
 
   def initialize(name, description)
     @name, @description = name, description
     @id = $manager.next_quest_id
     @objectives = {}
+    @rewards = []
   end
 
   # Add a hash of objectives to the quest.
@@ -25,6 +26,16 @@ class Quest
       else
         [old] << new
       end
+    end
+  end
+
+  # A reward should be the class of the object given to the player
+  # upon completion, e.g. Sword
+  def add_rewards(r)
+    if r.is_a? Array
+      @rewards.concat r
+    else
+      @rewards << r
     end
   end
 end

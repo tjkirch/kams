@@ -1,5 +1,6 @@
 require 'observer'
 
+# Including classes must have an @inventory if they're given rewards
 module HasQuests
   def self.included(base)
     base.send :include, Observable
@@ -73,7 +74,14 @@ module HasQuests
     }
     @quests.delete quest_id
 
-    ### TODO: give reward
     self.output "You've completed the quest #{quest.name}."
+
+    quest = $manager.find_quest(quest_id)
+    quest.rewards.each do |reward|
+      r = reward.new
+      $manager.add_object r
+      self.inventory << r
+      self.output "You received a reward: #{r}"
+    end
   end
 end
