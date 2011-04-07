@@ -354,10 +354,10 @@ class StorageMachine
     return object
   end
 
-  # Loads the quest represented by an ID.
-  def load_quest(id)
+  # Loads the quest represented by a given ID.
+  def load_quest(quest_id)
     open_store("quests") do |gd|
-      quest = gd[id.to_s]
+      quest = gd[quest_id.to_s]
     end
 
     if quest.nil?

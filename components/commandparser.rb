@@ -746,7 +746,7 @@ module CommandParser
       case input
       when /^quest\s+(accept|abandon)\s+(\d+)$/i
         event.action = $1.downcase.to_sym
-        event.quest = $2
+        event.quest_id = $2
       else
         return nil
       end

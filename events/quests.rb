@@ -6,6 +6,6 @@ module Quests
   end
 
   def self.abandon(event, player, room)
-    player.remove_quest(event[:quest]) if player.on_quest?(event[:quest])
+    player.remove_quest(event[:quest_id]) if player.on_quest?(event[:quest_id])
   end
 end
