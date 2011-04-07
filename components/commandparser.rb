@@ -177,6 +177,8 @@ module CommandParser
 
   @mobile = Set.new(['teach'])
 
+  @quest = Set.new(['quest'])
+
   #etc...
 
   class <<self
@@ -242,6 +244,8 @@ module CommandParser
           parse_news input
         elsif @mobile.include? command and player.is_a? Mobile
           parse_mobile command  ### implement me
+        elsif @quest.include? command
+          parse_quest input
         elsif input =~ /^alarm\s+([0-9]+)$/i
           after $1.to_i do
             player.output "***ALARM***"
@@ -729,6 +733,20 @@ module CommandParser
       when /^dodge(\s+(.*))?$/i
         event.action = :simple_dodge
         event.target = $2 if $2
+      else
+        return nil
+      end
+
+      event
+    end
+
+    def parse_quest(input)
+      event = Event.new(:Quests)
+
+      case input
+      when /^quest\s+(accept|abandon)\s+(\d+)$/i
+        event.action = $1.downcase.to_sym
+        event.quest = $2
       else
         return nil
       end
