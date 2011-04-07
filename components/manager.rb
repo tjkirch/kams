@@ -7,8 +7,8 @@ require 'set'
 
 #The Manager class uses the observer model to recieve events from objects, which
 #it then passes along to the EventHandler.
-#The Manager also keeps track of all game objects and takes care of adding, removing, and
-#finding them.
+#The Manager also keeps track of all game objects and quests, and
+#takes care of adding, removing, and finding them.
 #
 #The server's Manager is a global named $manager.
 class Manager
@@ -21,13 +21,14 @@ class Manager
   def initialize(objects = nil)
     @soft_restart = false
     @storage = StorageMachine.new
+    @quest_mutex = Mutex.new
     @uptime = Time.new.to_i
 
     unless objects
       @cancelled_events = Set.new
 
       log "Loading objects from storage..."
-      @game_objects = @storage.load_all(false, CacheGary.new(@storage, self))
+      @game_objects = @storage.load_game_objects(false, CacheGary.new(@storage, self))
       log "#{@game_objects.length} objects have been loaded."
 
       @calendar = Calendar.new
@@ -38,6 +39,12 @@ class Manager
     else
       @game_objects = objects
     end
+
+    log "Loading quests from storage..."
+    @quests = @storage.load_all_quests
+    log "#{@quests.length} quests have been loaded."
+
+    @next_quest_id = @quests.length
   end
 
   #Checks if a game object ID exists already, to avoid conflicts.
@@ -70,7 +77,7 @@ class Manager
   #Save all objects.
   def save_all
     stop
-    @storage.save_all(@game_objects)
+    @storage.save_all(@game_objects, @quests)
     start
   end
 
@@ -482,5 +489,11 @@ class Manager
 
   def to_s
     "The Manager"
+  end
+
+  def next_quest_id
+    @quest_mutex.synchronize do
+      return @next_quest_id += 1
+    end
   end
 end

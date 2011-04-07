@@ -90,7 +90,7 @@ def reset_storage
 
   puts "Recreating storage structure..."
 
-  ["passwords", "players", "goids"].each do |f|
+  ["passwords", "players", "goids", "quests"].each do |f|
     GDBM.open "storage/#{f}" do |g|
       g.fastmode = false
       g.clear

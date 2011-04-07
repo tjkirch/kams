@@ -34,6 +34,10 @@ load 'util/all-objects.rb'
 # player names to GOIDs. Then they can be looked up by GOID in the
 # storage/Player file. Additionally, passwords are stored as MD5 hashes in
 # storage/passwords, indexed by GOID (a tiny bit of security there).
+#
+# Quests are handled differently because they're not GameObjects.  They're
+# looked up by their ID, which is an integer (usually stored as a String).
+# They're kept in storage/quests.
 class StorageMachine
   def initialize(path = 'storage/')
     @path = path
@@ -183,6 +187,21 @@ class StorageMachine
     end
 
     return delete_object(goid)
+  end
+
+  # Save quest.  Pass the actual quest, not an ID.
+  def save_quest(quest)
+    open_store("quests", false) do |gd|
+      gd[quest.id.to_s] = Marshal.dump(quest)
+    end
+  end
+
+  def save_quests(quests)
+    open_store("quests", false) do |gd|
+      quests.each do |q|
+        gd[q.id.to_s] = Marshal.dump(q)
+      end
+    end
   end
 
   #Recursively stores object and its inventory.
@@ -335,11 +354,35 @@ class StorageMachine
     return object
   end
 
+  # Loads the quest represented by an ID.
+  def load_quest(id)
+    open_store("quests") do |gd|
+      quest = gd[id.to_s]
+    end
+
+    if quest.nil?
+      nil
+    else
+      Marshal.load(quest)
+    end
+  end
+
+  # Returns an array of all saved quests.
+  def load_all_quests
+    quests = []
+    open_store("quests") do |gd|
+      gd.each_pair do |k,v|
+        quests << Marshal.load(v)
+      end
+    end
+    quests
+  end
+
   #Loads all GameObjects back into a Gary.
   #Except for players. Unless you want them.
   #
   #This method isn't very efficient. Sorry.
-  def load_all(include_players = false, game_objects = nil)
+  def load_game_objects(include_players = false, game_objects = nil)
     log "Loading all game objects...may take a while."
     files = {}
     objects = []
@@ -391,11 +434,11 @@ class StorageMachine
     return game_objects
   end
 
-  #Saves all objects in the game_objects Gary.
+  #Saves all objects in the game_objects Gary, and all given quests.
   #
   #This should mainly be used when the game exits,
-  #as it briefly mutilates the objects.
-  def save_all(game_objects)
+  #as it briefly mutilates the game objects.
+  def save_all(game_objects, quests)
     log "Saving given objects (#{game_objects.length})...please wait..."
     @saved = 0
     game_objects.each do |o|
@@ -406,6 +449,10 @@ class StorageMachine
       end
     end
     log "...done saving objects (#{@saved})."
+
+    log "Saving given quests (#{quests.length})...please wait..."
+    save_quests(quests)
+    log "...done saving quests (#{quests.length})."
   end
 
   #Open the store for the given type.
@@ -485,7 +532,7 @@ class StorageMachine
   #
   #THIS IS REALLY DANGEROUS
   def update_all_objects!
-    load_all(true).each do |game_object|
+    load_game_objects(true).each do |game_object|
       game_object = yield game_object
       store_object(game_object)
     end
