@@ -2,10 +2,12 @@ require 'objects/living'
 require 'lib/ansicolor'
 require 'components/commandparser'
 require 'traits/hasinventory'
+require 'traits/hasquests'
 require 'help/syntax'
 
 #Base class for all players.
 class Player < LivingObject
+  include HasQuests
 
   @@satiety = {
     120 => "completely stuffed",
