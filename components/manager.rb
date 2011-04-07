@@ -464,6 +464,10 @@ class Manager
     end
   end
 
+  def find_quest(quest_id)
+    @quests.find {|q| q.id == quest_id }
+  end
+
   #Restarts server.
   def restart
     alert_all("<important>Server is restarting. Please come back in a moment.</important>")
